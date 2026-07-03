@@ -38,6 +38,8 @@ model Creator {
   totalEarnings Float @default(0)
   pendingBalance Float @default(0)
   
+  tips      Tip[]    @relation("CreatorTips")
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
