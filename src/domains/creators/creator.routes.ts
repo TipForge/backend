@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { CreatorService } from './creator.service';
-import { CreateCreatorRequestSchema } from './creator.types';
+import { CreateCreatorRequestSchema, UpdateCreatorRequestSchema } from './creator.types';
 import { formatSuccess } from '../../types/response';
 import { authMiddleware } from '../../middleware/auth';
 
@@ -37,6 +37,27 @@ export const registerCreatorRoutes = (app: FastifyInstance, prisma: PrismaClient
       const { username } = request.params as { username: string };
       const creator = await creatorService.getCreatorByUsername(username);
       reply.send(formatSuccess(creator));
+    }
+  );
+
+  app.patch<{ Body: any; Params: { id: string } }>(
+    '/api/v1/creators/:id',
+    { preHandler: authMiddleware },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { id } = request.params as { id: string };
+      const body = UpdateCreatorRequestSchema.parse(request.body);
+      const user = request.user;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const creator = await creatorService.getCreatorById(id);
+      if (creator.userId !== user.userId) {
+        throw new Error('Unauthorized');
+      }
+
+      const updated = await creatorService.updateCreator(id, body);
+      reply.send(formatSuccess(updated));
     }
   );
 };
