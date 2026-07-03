@@ -11,4 +11,3 @@ yarn-debug.log*
 .vscode/
 *.swp
 *.swo
-.prisma/
