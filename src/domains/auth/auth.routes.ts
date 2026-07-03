@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { AuthService } from './auth.service';
-import { RegisterRequestSchema } from './auth.types';
+import { RegisterRequestSchema, LoginRequestSchema } from './auth.types';
 import { formatSuccess } from '../../types/response';
 
 export const registerAuthRoutes = (app: FastifyInstance, prisma: PrismaClient): void => {
@@ -13,6 +13,15 @@ export const registerAuthRoutes = (app: FastifyInstance, prisma: PrismaClient): 
       const body = RegisterRequestSchema.parse(request.body);
       const result = await authService.register(body);
       reply.code(201).send(formatSuccess(result));
+    }
+  );
+
+  app.post<{ Body: any }>(
+    '/api/v1/auth/login',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const body = LoginRequestSchema.parse(request.body);
+      const result = await authService.login(body);
+      reply.send(formatSuccess(result));
     }
   );
 };

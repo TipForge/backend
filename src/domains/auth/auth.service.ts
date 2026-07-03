@@ -31,6 +31,28 @@ export class AuthService extends BaseService {
     });
   }
 
+  async login(data: LoginRequest): Promise<{ user: any; token: string }> {
+    return this.executeWithLogging('user.login', async () => {
+      const user = await this.prisma.user.findUnique({
+        where: { email: data.email },
+      });
+
+      if (!user) {
+        throw new ValidationError('Invalid email or password');
+      }
+
+      // TODO: verify password hash
+      if (user.password !== data.password) {
+        throw new ValidationError('Invalid email or password');
+      }
+
+      return {
+        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        token: 'TODO', // TODO: generate JWT
+      };
+    });
+  }
+
   async getByEmail(email: string): Promise<any> {
     return this.executeWithLogging('user.getByEmail', async () => {
       const user = await this.prisma.user.findUnique({
