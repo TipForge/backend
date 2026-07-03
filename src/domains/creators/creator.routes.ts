@@ -36,6 +36,11 @@ export const registerCreatorRoutes = (app: FastifyInstance, prisma: PrismaClient
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { username } = request.params as { username: string };
       const creator = await creatorService.getCreatorByUsername(username);
+
+      if (!creator.isPublic) {
+        throw new Error('Creator profile is not public');
+      }
+
       reply.send(formatSuccess(creator));
     }
   );
