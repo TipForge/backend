@@ -12,7 +12,10 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "fastify": "^4.27.0",
@@ -21,7 +24,8 @@
     "@fastify/cors": "^9.0.1",
     "pino": "^8.17.2",
     "pino-pretty": "^10.3.1",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "@prisma/client": "^5.17.0"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
@@ -31,7 +35,8 @@
     "prettier": "^3.3.3",
     "tsx": "^4.17.0",
     "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "prisma": "^5.17.0"
   },
   "engines": {
     "node": ">=20.0.0"
