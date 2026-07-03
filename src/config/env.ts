@@ -7,6 +7,8 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform(Number).default('3000'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  DATABASE_URL: z.string().optional(),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
 });
 
 type Environment = z.infer<typeof EnvSchema>;
