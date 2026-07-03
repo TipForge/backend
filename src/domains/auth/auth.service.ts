@@ -3,6 +3,7 @@ import { BaseService } from '../../services/base.service';
 import { RegisterRequest, LoginRequest } from './auth.types';
 import { ValidationError } from '../../utils/errors';
 import { generateToken } from '../../utils/jwt';
+import { hashPassword, comparePasswords } from '../../utils/password';
 
 export class AuthService extends BaseService {
   constructor(private prisma: PrismaClient) {
@@ -19,10 +20,12 @@ export class AuthService extends BaseService {
         throw new ValidationError('Email already registered');
       }
 
+      const hashedPassword = await hashPassword(data.password);
+
       const user = await this.prisma.user.create({
         data: {
           email: data.email,
-          password: data.password, // TODO: hash password
+          password: hashedPassword,
           name: data.name,
           role: 'fan',
         },
@@ -42,8 +45,8 @@ export class AuthService extends BaseService {
         throw new ValidationError('Invalid email or password');
       }
 
-      // TODO: verify password hash
-      if (user.password !== data.password) {
+      const isPasswordValid = await comparePasswords(data.password, user.password);
+      if (!isPasswordValid) {
         throw new ValidationError('Invalid email or password');
       }
 
