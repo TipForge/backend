@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - represents both creators and tippers
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  phone     String?  @unique
+  password  String   // hashed
+  
+  // Profile
+  name      String?
+  username  String?  @unique
+  avatar    String?
+  bio       String?
+  
+  // Account status
+  isCreator Boolean  @default(false)
+  verified  Boolean  @default(false)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  creator   Creator?
+  wallets   Wallet[]
+  sentTips  Transaction[]  @relation("Tipper")
+  notifications Notification[]
+  sessions  Session[]
+}
+
+// Creator profile - extended from User
+model Creator {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Social media profiles
+  socialProfiles SocialProfile[]
+  
+  // Primary payout wallet
+  primaryWalletId String?
+  primaryWallet   Wallet? @relation("PrimaryWallet", fields: [primaryWalletId], references: [id])
+  
+  // Earnings tracking
+  totalEarnings   Float   @default(0)
+  pendingBalance  Float   @default(0)
+  
+  // Settings
+  isPublic        Boolean @default(true)
+  description     String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  receivedTips    Transaction[] @relation("Creator")
+  payoutRecords   PayoutRecord[]
+}
+
+// Social media profile linking
+model SocialProfile {
+  id        String   @id @default(cuid())
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  platform  String   // x, instagram, tiktok, youtube, github, twitch
+  username  String
+  profileUrl String?
+  
+  // Verification
+  verified  Boolean  @default(false)
+  verificationToken String?
+  verifiedAt DateTime?
+  
+  // Unique per creator and platform
+  @@unique([creatorId, platform])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Wallet model - Stellar wallet linking
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stellar account
+  publicKey String   @unique
+  
+  // Wallet metadata
+  name      String?
+  isDefault Boolean  @default(false)
+  
+  // Verification
+  verified  Boolean  @default(false)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  primaryFor Creator? @relation("PrimaryWallet")
+  transactions Transaction[]
+  payouts   PayoutRecord[]
+}
+
+// Transactions - tip payments
+model Transaction {
+  id        String   @id @default(cuid())
+  
+  // Participants
+  tipperId  String
+  tipper    User     @relation("Tipper", fields: [tipperId], references: [id])
+  creatorId String
+  creator   Creator  @relation("Creator", fields: [creatorId], references: [id])
+  
+  // Amount
+  amount    Float    // USDC amount
+  currency  String   @default("USDC")
+  
+  // Stellar transaction
+  stellarTxHash String? @unique
+  stellarStatus String  @default("pending") // pending, confirmed, failed
+  
+  // Metadata
+  message   String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  confirmedAt DateTime?
+  
+  // Relations
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  walletId  String
+}
+
+// Payout records - creator withdrawals
+model PayoutRecord {
+  id        String   @id @default(cuid())
+  
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  
+  // Payout details
+  amount    Float
+  status    String   @default("pending") // pending, processing, completed, failed
+  
+  // Stellar
+  stellarTxHash String? @unique
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+  
+  @@index([creatorId])
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String   // tip_received, payout_processed, etc
+  title     String
+  message   String
+  
+  read      Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+}
+
+// Sessions for auth
+model Session {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token     String   @unique
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+}
