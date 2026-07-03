@@ -1,5 +1,6 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import { config } from './config/env';
+import { AppError } from './utils/errors';
 
 const app = Fastify({
   logger: {
@@ -14,6 +15,23 @@ app.get('/health', async (_request, _reply) => {
     timestamp: new Date().toISOString(),
     environment: config.NODE_ENV,
   };
+});
+
+// Error handler
+app.setErrorHandler(async (error, _request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+  if (error instanceof AppError) {
+    reply.code(error.statusCode).send({
+      error: error.message,
+      code: error.code,
+    });
+    return;
+  }
+
+  app.log.error(error);
+  reply.code(500).send({
+    error: 'Internal server error',
+    code: 'INTERNAL_ERROR',
+  });
 });
 
 const start = async (): Promise<void> => {
