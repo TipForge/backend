@@ -9,6 +9,8 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  JWT_SECRET: z.string().default('your-secret-key-change-in-production'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
 });
 
 type Environment = z.infer<typeof EnvSchema>;

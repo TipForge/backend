@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { BaseService } from '../../services/base.service';
 import { RegisterRequest, LoginRequest } from './auth.types';
 import { ValidationError } from '../../utils/errors';
+import { generateToken } from '../../utils/jwt';
 
 export class AuthService extends BaseService {
   constructor(private prisma: PrismaClient) {
@@ -46,9 +47,15 @@ export class AuthService extends BaseService {
         throw new ValidationError('Invalid email or password');
       }
 
+      const token = generateToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
       return {
         user: { id: user.id, email: user.email, name: user.name, role: user.role },
-        token: 'TODO', // TODO: generate JWT
+        token,
       };
     });
   }
