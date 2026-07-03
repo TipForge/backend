@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { RegisterRequestSchema, LoginRequestSchema } from './auth.types';
 import { formatSuccess } from '../../types/response';
 import { authMiddleware } from '../../middleware/auth';
+import { blacklistToken } from '../../utils/token-blacklist';
+import { verifyToken } from '../../utils/jwt';
 
 export const registerAuthRoutes = (app: FastifyInstance, prisma: PrismaClient): void => {
   const authService = new AuthService(prisma);
@@ -41,6 +43,21 @@ export const registerAuthRoutes = (app: FastifyInstance, prisma: PrismaClient): 
           role: user.role,
         })
       );
+    }
+  );
+
+  app.post(
+    '/api/v1/auth/logout',
+    { preHandler: authMiddleware },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const authHeader = request.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        const payload = verifyToken(token);
+        const expiresAt = new Date((payload as any).exp * 1000);
+        await blacklistToken(token, expiresAt);
+      }
+      reply.send(formatSuccess({ message: 'Logged out successfully' }));
     }
   );
 };
