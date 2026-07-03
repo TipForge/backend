@@ -21,4 +21,13 @@ export const registerCreatorRoutes = (app: FastifyInstance, prisma: PrismaClient
       reply.code(201).send(formatSuccess(result));
     }
   );
+
+  app.get<{ Params: { id: string } }>(
+    '/api/v1/creators/:id',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { id } = request.params as { id: string };
+      const creator = await creatorService.getCreatorById(id);
+      reply.send(formatSuccess(creator));
+    }
+  );
 };
