@@ -1,4 +1,5 @@
 import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import cors from '@fastify/cors';
 import { config } from './config/env';
 import { AppError } from './utils/errors';
 
@@ -6,6 +7,12 @@ const app = Fastify({
   logger: {
     level: config.LOG_LEVEL,
   },
+});
+
+// Register plugins
+app.register(cors, {
+  origin: true,
+  credentials: true,
 });
 
 // Health check endpoint
