@@ -30,4 +30,13 @@ export const registerCreatorRoutes = (app: FastifyInstance, prisma: PrismaClient
       reply.send(formatSuccess(creator));
     }
   );
+
+  app.get<{ Params: { username: string } }>(
+    '/api/v1/creators/handle/:username',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { username } = request.params as { username: string };
+      const creator = await creatorService.getCreatorByUsername(username);
+      reply.send(formatSuccess(creator));
+    }
+  );
 };
